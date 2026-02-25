@@ -19,11 +19,11 @@ import org.springframework.web.multipart.MultipartFile
 /**
  * REST controller exposing the résumé-matching API.
  *
- * Base path : /api/v1/matches
+ * Base path: /api/v1/matches
  *
  * Endpoints:
- *   POST /api/v1/matches   – upload résumé + job URL → [MatchResponse]
- *   GET  /api/v1/health    – liveness probe
+ *   POST /api/v1/matches – upload résumé + job URL → [MatchResponse]
+ *   GET /api/v1/health – liveness probe
  *
  * The controller is intentionally thin: it validates input, delegates all
  * business logic to [MatchOrchestrationService], and maps the result to an

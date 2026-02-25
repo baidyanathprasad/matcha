@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 /**
- * Centralised exception-to-HTTP mapping for the entire web layer.
+ * Centralized exception-to-HTTP mapping for the entire web layer.
  *
  * Every handler returns a consistent [ErrorResponse] envelope so API
  * consumers never have to parse ad-hoc error formats.

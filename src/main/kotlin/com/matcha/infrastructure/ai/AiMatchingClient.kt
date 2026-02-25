@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component
  *
  * The [BeanOutputConverter] appends a JSON-schema block to the prompt so the
  * model knows exactly what structure to emit, then handles deserialization.
- * Temperature is kept low (0.2) in application.yml for deterministic JSON output.
+ * The temperature is kept low (0.2) in application.yml for deterministic JSON output.
  */
 @Component
 class AiMatchingClient(
@@ -36,7 +36,7 @@ class AiMatchingClient(
      * @param resumeText Plain text extracted from the PDF résumé.
      * @param jobText    Plain text scraped from the job posting.
      * @return [MatchResult] populated by the LLM.
-     * @throws AiParsingException if the model response cannot be deserialised.
+     * @throws AiParsingException if the model response cannot be deserialize.
      */
     fun compare(
         resumeText: String,
