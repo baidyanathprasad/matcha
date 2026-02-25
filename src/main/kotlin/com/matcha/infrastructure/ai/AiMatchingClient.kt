@@ -45,11 +45,37 @@ class AiMatchingClient(
         resumeText: String,
         jobText: String,
     ): MatchResult {
-        // Truncate inputs to stay within llama3.2's context window
+        // Truncate inputs to stay within context window while preserving more context for better matching
         val resume = resumeText.take(props.match.resumeCharLimit)
         val jd = jobText.take(props.match.jdCharLimit)
 
-        log.info("Sending to Ollama – résumé={} chars, JD={} chars", resume.length, jd.length)
+        log.info(
+            "Sending to Ollama – résumé={}/{} chars, JD={}/{} chars (limits: resume={}, jd={})",
+            resume.length,
+            resumeText.length,
+            jd.length,
+            jobText.length,
+            props.match.resumeCharLimit,
+            props.match.jdCharLimit,
+        )
+
+        // Warn if input was truncated
+        if (resume.length < resumeText.length) {
+            log.warn(
+                "Resume was truncated: {} chars removed (original: {}, limit: {})",
+                resumeText.length - resume.length,
+                resumeText.length,
+                props.match.resumeCharLimit,
+            )
+        }
+        if (jd.length < jobText.length) {
+            log.warn(
+                "JD was truncated: {} chars removed (original: {}, limit: {})",
+                jobText.length - jd.length,
+                jobText.length,
+                props.match.jdCharLimit,
+            )
+        }
 
         val prompt = buildPrompt(resume, jd)
 
@@ -69,15 +95,15 @@ class AiMatchingClient(
                 val root = findRootCause(ex)
                 val rootMsg = (root.message ?: "").lowercase()
 
-                // Fail fast for non-transient "configuration / environment" errors (no amount of retry helps)
-                if (isModelNotFound(rootMsg) || rootMsg.contains("model") && rootMsg.contains("not found")) {
+                // Fail fast for non-transient "configuration / environment" errors
+                if ((isModelNotFound(rootMsg)) || (rootMsg.contains("model") && rootMsg.contains("not found"))) {
                     val err = buildErrorMessage(ex)
                     log.error("Ollama model not available: {}", err)
                     throw AiParsingException(err, ex)
                 }
 
                 // If it's a clear connectivity error, build an actionable message and abort
-                if (root is ConnectException || root is UnknownHostException || root is SocketTimeoutException ||
+                if ((root is ConnectException || root is UnknownHostException || root is SocketTimeoutException) ||
                     (root.message?.contains("Connection refused", ignoreCase = true) == true)
                 ) {
                     val err = buildErrorMessage(ex)
@@ -104,14 +130,69 @@ class AiMatchingClient(
 
         log.debug("Raw AI response:\n{}", rawResponse)
 
-        return runCatching { converter.convert(rawResponse!!) }
+        // Attempt to fix incomplete JSON if needed
+        val fixedResponse = fixIncompleteJson(rawResponse)
+        if (fixedResponse != rawResponse) {
+            log.warn("Response was incomplete; attempted to fix JSON")
+        }
+
+        return runCatching { converter.convert(fixedResponse) }
             .getOrElse { ex ->
                 throw AiParsingException(
                     "Could not deserialize AI response into MatchResult. " +
-                        "Raw response was: ${rawResponse?.take(300)}",
+                        "Raw response was: ${fixedResponse?.take(300)}",
                     ex,
                 )
             }!!
+    }
+
+    /**
+     * Attempt to fix incomplete JSON responses from Ollama.
+     * If the response is missing closing brackets/braces, add them.
+     */
+    private fun fixIncompleteJson(response: String?): String {
+        if (response == null) return ""
+
+        val trimmed = response.trim()
+
+        // Check if JSON is incomplete (missing closing braces)
+        var openBraces = 0
+        var openBrackets = 0
+        var inString = false
+        var escapeNext = false
+
+        for (char in trimmed) {
+            if (escapeNext) {
+                escapeNext = false
+                continue
+            }
+
+            when (char) {
+                '\\' -> escapeNext = true
+                '"' -> inString = !inString
+                '{' -> if (!inString) openBraces++
+                '}' -> if (!inString) openBraces--
+                '[' -> if (!inString) openBrackets++
+                ']' -> if (!inString) openBrackets--
+            }
+        }
+
+        // If JSON is incomplete, append missing closing brackets/braces
+        var fixed = trimmed
+        if (openBrackets > 0 || openBraces > 0) {
+            log.warn(
+                "Incomplete JSON detected: {} open brackets, {} open braces. Attempting to fix.",
+                openBrackets,
+                openBraces,
+            )
+
+            // Append missing closing brackets
+            repeat(openBrackets) { fixed += "]" }
+            // Append missing closing braces
+            repeat(openBraces) { fixed += "}" }
+        }
+
+        return fixed
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
@@ -123,8 +204,6 @@ class AiMatchingClient(
         val lower = message.lowercase()
 
         return when {
-            // ... existing code ...
-
             // "model not found" (common when the configured model tag isn't pulled/available)
             isModelNotFound(lower) -> {
                 "Ollama reports the requested model is not available.\n" +
@@ -147,8 +226,6 @@ class AiMatchingClient(
                 "Ollama server error (500). The service may be misconfigured or the model may be missing.\n" +
                     "Verify models: curl -s $ollamaUrl/api/tags"
             }
-
-            // ... existing code ...
 
             else -> {
                 "Ollama call failed: $message\n" +
@@ -180,23 +257,35 @@ class AiMatchingClient(
         jd: String,
     ): String =
         """
-        You are an expert technical recruiter and résumé analyst.
+You are an expert technical recruiter with deep knowledge of software engineering roles.
 
-        Analyse the RESUME and JOB DESCRIPTION below and produce a compatibility assessment.
+Your task: Analyze the RESUME against the JOB DESCRIPTION and produce a structured compatibility assessment.
 
-        ## RESUME
-        $resume
+## RESUME
+$resume
 
-        ## JOB DESCRIPTION
-        $jd
+## JOB DESCRIPTION
+$jd
 
-        ## RULES
-        - Score the match 0 (no overlap) to 100 (perfect match).
-        - List every skill / technology / qualification present in BOTH documents under matchedSkills.
-        - List every JD requirement missing or weak in the résumé under gaps.
-        - Write a concise 2–3 sentence matchReason explaining the score.
-        - Respond with VALID JSON ONLY. No markdown fences, no preamble, no trailing text.
+## MATCHING METHODOLOGY
+Score the compatibility 0-100 using this approach:
+1. Identify ALL technical skills, technologies, and tools mentioned in BOTH documents
+2. Score based on:
+   - Skill overlap (how many required skills candidate has): 50 points
+   - Experience level match (seniority, scope): 25 points
+   - Domain expertise alignment: 15 points
+   - Soft skills / leadership if mentioned: 10 points
+3. For gaps: List ONLY explicitly stated requirements missing from the résumé
+4. Match reason: Explain in 2–3 sentences WHY you gave this score, referencing specific skills
 
-        ${converter.format}
+## OUTPUT FORMAT
+Respond with VALID JSON ONLY. No markdown, no explanations, no preamble.
+Include these exact fields:
+- score: integer 0-100
+- matchedSkills: array of exact skill names found in both documents
+- gaps: array of exact requirements from JD missing in résumé
+- matchReason: 2-3 sentence explanation
+
+${converter.format}
         """.trimIndent()
 }

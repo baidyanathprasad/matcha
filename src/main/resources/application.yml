@@ -15,8 +15,10 @@ spring:
       chat:
         model: llama3.2
         options:
-          temperature: 0.2
+          temperature: 0.1
           num-ctx: 8192
+          top-p: 0.1
+          top-k: 1
 
   # ── Spring Mail / Gmail SMTP ─────────────────────────────────────────────
   mail:
@@ -36,8 +38,8 @@ spring:
 app:
   match:
     score-threshold: 75
-    resume-char-limit: 4000
-    jd-char-limit: 4000
+    resume-char-limit: 12000
+    jd-char-limit: 12000
   email:
     from: ${GMAIL_USERNAME}
     to: ${NOTIFY_EMAIL:you@example.com}

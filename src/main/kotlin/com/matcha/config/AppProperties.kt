@@ -10,8 +10,8 @@ data class AppProperties(
 ) {
     data class MatchProperties(
         @DefaultValue("75") val scoreThreshold: Int = 75,
-        @DefaultValue("4000") val resumeCharLimit: Int = 4000,
-        @DefaultValue("4000") val jdCharLimit: Int = 4000,
+        @DefaultValue("12000") val resumeCharLimit: Int = 12000,
+        @DefaultValue("12000") val jdCharLimit: Int = 12000,
     )
 
     data class EmailProperties(
