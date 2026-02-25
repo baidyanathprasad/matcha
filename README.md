@@ -47,11 +47,11 @@ src/main/kotlin/com/matcha/
 
 ## Prerequisites
 
-| Tool    | Version  |
-|---------|----------|
-| JDK     | 21       |
-| Ollama  | latest   |
-| Gradle  | (wrapper)|
+| Tool   | Version   |
+|--------|-----------|
+| JDK    | 21        |
+| Ollama | latest    |
+| Gradle | (wrapper) |
 
 ---
 

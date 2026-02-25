@@ -48,11 +48,26 @@ server:
   port: 8080
   error:
     include-message: always
-    include-binding-errors: always
+    include-stacktrace: on-param  # Show stack trace only when ?trace=true is passed
+
+# ── Spring Boot Actuator (Health Checks) ──────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always  # Show detailed health information
+      show-components: always  # Show component health (e.g., Ollama)
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging:
   level:
+    root: INFO
     com.matcha: DEBUG
-    org.springframework.ai: INFO
-    org.springframework.web: INFO
+    org.springframework.ai: DEBUG
+    org.springframework.boot: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%-5level] [%-15thread] %-40logger{39} : %msg%n"
+
