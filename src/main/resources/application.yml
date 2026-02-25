@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: matcha
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  # ── Spring AI / Ollama ────────────────────────────────────────────────────
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: llama3.2
+        options:
+          temperature: 0.2
+          num-ctx: 8192
+
+  # ── Spring Mail / Gmail SMTP ─────────────────────────────────────────────
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# ── Application Properties ────────────────────────────────────────────────────
+app:
+  match:
+    score-threshold: 75
+    resume-char-limit: 4000
+    jd-char-limit: 4000
+  email:
+    from: ${GMAIL_USERNAME}
+    to: ${NOTIFY_EMAIL:you@example.com}
+    subject-prefix: "[Resume Matcher]"
+
+# ── Server ────────────────────────────────────────────────────────────────────
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.matcha: DEBUG
+    org.springframework.ai: INFO
+    org.springframework.web: INFO

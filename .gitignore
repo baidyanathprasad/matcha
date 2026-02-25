@@ -1,0 +1,173 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Gradle
+# ─────────────────────────────────────────────────────────────────────────────
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Maven
+# ─────────────────────────────────────────────────────────────────────────────
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IDEs
+# ─────────────────────────────────────────────────────────────────────────────
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.DS_Store
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.settings/
+.classpath
+.project
+.c9/
+*.launch
+.scalafmt.conf
+
+# Eclipse
+.metadata
+RemoteSystemsTempFiles/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+*~
+.*.swo
+.*.swp
+
+# Emacs
+\#*\#
+.\#*
+
+# Netbeans
+nbproject/
+.nb-gradle/
+.nbattrs
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Java / Kotlin
+# ─────────────────────────────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.log
+*.pid
+*.seed
+*.pid.lock
+hs_err_pid*
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Spring Boot / Application
+# ─────────────────────────────────────────────────────────────────────────────
+application-local.yml
+application-dev.yml
+application-prod.yml
+application.properties
+.env
+.env.local
+.env.*.local
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Node / NPM (if using any Node-based tools)
+# ─────────────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OS
+# ─────────────────────────────────────────────────────────────────────────────
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Database / Local Storage
+# ─────────────────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+data/
+db/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Uploaded Files / Temporary Files
+# ─────────────────────────────────────────────────────────────────────────────
+uploads/
+temp/
+tmp/
+*.tmp
+*.bak
+*.backup
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Gradle Wrapper (optional to exclude)
+# ─────────────────────────────────────────────────────────────────────────────
+# Uncomment if you want to exclude gradle wrapper
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Kotlin Compiler Cache
+# ─────────────────────────────────────────────────────────────────────────────
+.kotlin/
+build/kotlin/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JUnit
+# ─────────────────────────────────────────────────────────────────────────────
+.junit.platform.suite.properties
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Secrets / Credentials
+# ─────────────────────────────────────────────────────────────────────────────
+secrets/
+.secrets
+*.pem
+*.key
+*.keystore
+*.jks
+credentials.json
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Miscellaneous
+# ─────────────────────────────────────────────────────────────────────────────
+*.orig
+HELP.md
+dist/
+
