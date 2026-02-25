@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Matcher - AI-Powered Job Fit Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        /* ── HOME PAGE ─────────────────────────────────────────────────────────── */
+        .home-page {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .home-page.hidden {
+            display: none;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── FILE INPUT ────────────────────────────────────────────────────────── */
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            background: var(--gray-50);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .file-input-wrapper input[type="file"]:hover + .file-input-label,
+        .file-input-wrapper.drag-over .file-input-label {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .file-icon {
+            font-size: 20px;
+        }
+
+        .file-name {
+            display: block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .file-name.error {
+            color: var(--danger);
+        }
+
+        /* ── TEXT INPUT ────────────────────────────────────────────────────────── */
+        input[type="text"],
+        input[type="url"] {
+            padding: 12px 16px;
+            border: 1.5px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:hover,
+        input[type="url"]:hover {
+            border-color: var(--primary-light);
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="text"]::placeholder,
+        input[type="url"]::placeholder {
+            color: var(--gray-400);
+        }
+
+        /* ── BUTTON ────────────────────────────────────────────────────────────── */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── RESULTS PAGE ──────────────────────────────────────────────────────── */
+        .results-page {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .results-page.hidden {
+            display: none;
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .score-circle.low {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .score-circle.medium {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .score-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+
+        .match-reason {
+            background: var(--gray-50);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--gray-700);
+            margin-bottom: 24px;
+        }
+
+        .section {
+            text-align: left;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray-600);
+            margin-bottom: 12px;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .skill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .skill-badge.match {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .skill-badge.gap {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .skill-badge::before {
+            font-size: 14px;
+        }
+
+        .skill-badge.match::before {
+            content: "✓";
+        }
+
+        .skill-badge.gap::before {
+            content: "✗";
+        }
+
+        .job-url {
+            background: var(--gray-50);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            word-break: break-all;
+        }
+
+        .job-url a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .job-url a:hover {
+            text-decoration: underline;
+        }
+
+        .email-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 24px;
+        }
+
+        .email-status.sent {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .email-status.not-sent {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        /* ── ERROR STATE ───────────────────────────────────────────────────────── */
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .error-page.hidden {
+            display: none;
+        }
+
+        .error-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .error-card h2 {
+            font-size: 24px;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .error-card p {
+            color: var(--gray-600);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            white-space: pre-wrap;
+            text-align: left;
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        /* ── RESPONSIVE ────────────────────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            .card, .score-card, .error-card {
+                padding: 24px;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .score-circle {
+                width: 100px;
+                height: 100px;
+                font-size: 42px;
+            }
+
+            .skill-list {
+                gap: 6px;
+            }
+
+            .skill-badge {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+
+        /* ── LOADING STATE ──────────────────────────────────────────────────────── */
+        .loading-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            min-height: 400px;
+        }
+
+        .loading-page.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .loading-text small {
+            display: block;
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HOME PAGE -->
+        <div class="home-page" id="homePage">
+            <div class="header">
+                <div class="logo">🎯</div>
+                <h1>Resume Matcher</h1>
+                <p>AI-powered job fit analysis</p>
+            </div>
+
+            <div class="card">
+                <form id="matchForm">
+                    <!-- Resume Upload -->
+                    <div class="form-group">
+                        <label for="resumeInput">Resume (PDF)</label>
+                        <div class="file-input-wrapper" id="fileInputWrapper">
+                            <input
+                                type="file"
+                                id="resumeInput"
+                                accept=".pdf,application/pdf"
+                                required
+                            >
+                            <label for="resumeInput" class="file-input-label">
+                                <span class="file-icon">📄</span>
+                                <span>Click to upload or drag & drop</span>
+                            </label>
+                            <span class="file-name" id="fileName"></span>
+                        </div>
+                    </div>
+
+                    <!-- Job URL -->
+                    <div class="form-group">
+                        <label for="jobUrl">Job Posting URL</label>
+                        <input
+                            type="url"
+                            id="jobUrl"
+                            placeholder="https://www.linkedin.com/jobs/view/..."
+                            required
+                        >
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner" id="submitSpinner" style="display: none;"></span>
+                        <span id="submitText">Analyze Match</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- LOADING PAGE -->
+        <div class="loading-page" id="loadingPage">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">
+                Analyzing your profile...
+                <small>This may take a moment</small>
+            </div>
+        </div>
+
+        <!-- RESULTS PAGE -->
+        <div class="results-page" id="resultsPage">
+            <div class="score-card">
+                <div class="score-circle" id="scoreCircle">—</div>
+                <div class="score-label" id="scoreLabel">Match Score</div>
+
+                <div class="match-reason" id="matchReason"></div>
+
+                <!-- Job URL -->
+                <div class="job-url">
+                    <strong>Job:</strong> <a id="jobUrlLink" href="#" target="_blank">View Posting</a>
+                </div>
+
+                <!-- Email Status -->
+                <div class="email-status" id="emailStatus"></div>
+
+                <!-- Matched Skills -->
+                <div class="section">
+                    <div class="section-title">✓ Matched Skills</div>
+                    <div class="skill-list" id="matchedSkills"></div>
+                </div>
+
+                <!-- Gaps -->
+                <div class="section">
+                    <div class="section-title">⚠ Experience Gaps</div>
+                    <div class="skill-list" id="gapsList"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-primary" id="tryAnotherBtn">
+                        ← Try Another
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR PAGE -->
+        <div class="error-page" id="errorPage">
+            <div class="error-card">
+                <div class="error-icon">⚠️</div>
+                <h2>Analysis Failed</h2>
+                <p id="errorMessage"></p>
+                <button class="btn btn-primary" id="retryBtn">← Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── State Management ───────────────────────────────────────────────────
+        const state = {
+            resumeFile: null,
+            showPage: (pageName) => {
+                document.getElementById('homePage').classList.toggle('hidden', pageName !== 'home');
+                document.getElementById('loadingPage').classList.toggle('hidden', pageName !== 'loading');
+                document.getElementById('resultsPage').classList.toggle('hidden', pageName !== 'results');
+                document.getElementById('errorPage').classList.toggle('hidden', pageName !== 'error');
+            }
+        };
+
+        // ── DOM Elements ───────────────────────────────────────────────────────
+        const elements = {
+            form: document.getElementById('matchForm'),
+            resumeInput: document.getElementById('resumeInput'),
+            fileInputWrapper: document.getElementById('fileInputWrapper'),
+            fileName: document.getElementById('fileName'),
+            jobUrl: document.getElementById('jobUrl'),
+            submitBtn: document.querySelector('.btn-primary'),
+            submitSpinner: document.getElementById('submitSpinner'),
+            submitText: document.getElementById('submitText'),
+            scoreCircle: document.getElementById('scoreCircle'),
+            scoreLabel: document.getElementById('scoreLabel'),
+            matchReason: document.getElementById('matchReason'),
+            jobUrlLink: document.getElementById('jobUrlLink'),
+            emailStatus: document.getElementById('emailStatus'),
+            matchedSkills: document.getElementById('matchedSkills'),
+            gapsList: document.getElementById('gapsList'),
+            tryAnotherBtn: document.getElementById('tryAnotherBtn'),
+            errorMessage: document.getElementById('errorMessage'),
+            retryBtn: document.getElementById('retryBtn')
+        };
+
+        // ── File Input Handler ─────────────────────────────────────────────────
+        elements.resumeInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                state.resumeFile = file;
+                elements.fileName.textContent = `✓ ${file.name}`;
+                elements.fileName.classList.remove('error');
+            }
+        });
+
+        // Drag and drop
+        elements.fileInputWrapper.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            elements.fileInputWrapper.classList.add('drag-over');
+        });
+
+        elements.fileInputWrapper.addEventListener('dragleave', () => {
+            elements.fileInputWrapper.classList.remove('drag-over');
+        });
+
+        elements.fileInputWrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            elements.fileInputWrapper.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                elements.resumeInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                elements.resumeInput.dispatchEvent(event);
+            }
+        });
+
+        // ── Form Submission ────────────────────────────────────────────────────
+        elements.form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!state.resumeFile) {
+                elements.fileName.textContent = '✗ Please select a resume file';
+                elements.fileName.classList.add('error');
+                return;
+            }
+
+            const jobUrl = elements.jobUrl.value.trim();
+            if (!jobUrl) {
+                alert('Please enter a job URL');
+                return;
+            }
+
+            // Show loading state
+            elements.submitBtn.disabled = true;
+            elements.submitSpinner.style.display = 'inline-block';
+            elements.submitText.textContent = 'Analyzing...';
+            state.showPage('loading');
+
+            try {
+                const formData = new FormData();
+                formData.append('resume', state.resumeFile);
+                formData.append('jobUrl', jobUrl);
+
+                const response = await fetch('/api/v1/matches', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                elements.submitBtn.disabled = false;
+                elements.submitSpinner.style.display = 'none';
+                elements.submitText.textContent = 'Analyze Match';
+            }
+        });
+
+        // ── Display Results ────────────────────────────────────────────────────
+        function displayResults(data) {
+            // Score circle with color coding
+            const score = data.score;
+            elements.scoreCircle.textContent = `${score}%`;
+
+            if (score >= 75) {
+                elements.scoreCircle.classList.remove('low', 'medium');
+            } else if (score >= 50) {
+                elements.scoreCircle.classList.remove('low');
+                elements.scoreCircle.classList.add('medium');
+            } else {
+                elements.scoreCircle.classList.add('low');
+                elements.scoreCircle.classList.remove('medium');
+            }
+
+            // Match reason
+            elements.matchReason.textContent = data.matchReason;
+
+            // Job URL
+            elements.jobUrlLink.href = data.jobUrl;
+            elements.jobUrlLink.textContent = new URL(data.jobUrl).hostname;
+
+            // Email status
+            if (data.emailSent) {
+                elements.emailStatus.className = 'email-status sent';
+                elements.emailStatus.innerHTML = '✓ <strong>Notification sent!</strong> You\'ll receive an email shortly.';
+            } else {
+                elements.emailStatus.className = 'email-status not-sent';
+                elements.emailStatus.innerHTML = '⚠ <strong>Below threshold.</strong> Email notification was not sent.';
+            }
+
+            // Matched skills
+            elements.matchedSkills.innerHTML = (data.matchedSkills || [])
+                .map(skill => `<div class="skill-badge match">${skill}</div>`)
+                .join('');
+
+            // Gaps
+            elements.gapsList.innerHTML = (data.gaps || [])
+                .map(gap => `<div class="skill-badge gap">${gap}</div>`)
+                .join('');
+
+            state.showPage('results');
+        }
+
+        // ── Display Error ─────────────────────────────────────────────────────
+        function displayError(errorMessage) {
+            elements.errorMessage.textContent = errorMessage;
+            state.showPage('error');
+        }
+
+        // ── Action Buttons ────────────────────────────────────────────────────
+        elements.tryAnotherBtn.addEventListener('click', () => {
+            elements.form.reset();
+            elements.fileName.textContent = '';
+            elements.jobUrl.value = '';
+            state.resumeFile = null;
+            state.showPage('home');
+        });
+
+        elements.retryBtn.addEventListener('click', () => {
+            state.showPage('home');
+        });
+
+        // Initialize
+        state.showPage('home');
+    </script>
+</body>
+</html>
+
