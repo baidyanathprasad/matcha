@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Matcher - AI-Powered Job Fit Analysis</title>
+    <title>Matcha - AI-Powered Job Fit Analysis</title>
     <style>
         * {
             margin: 0;
@@ -536,12 +536,24 @@
         <!-- HOME PAGE -->
         <div class="home-page" id="homePage">
             <div class="header">
-                <div class="logo">🎯</div>
-                <h1>Resume Matcher</h1>
+                <div class="logo">🍵</div>
+                <h1>Matcha</h1>
                 <p>AI-powered job fit analysis</p>
             </div>
 
             <div class="card">
+                <!-- Instructions added: select resume, add JD URL, click analyze, loader appears -->
+                <div class="instructions" style="margin-bottom:16px;font-size:14px;color:var(--gray-700);">
+                    <strong>How to use Matcha</strong>
+
+                    <ol style="margin-top:12px; padding-left:18px; color:var(--gray-600);">
+                        <li>Select your resume (PDF).</li>
+                        <li>Paste a job description (JD) URL.</li>
+                        <li>Click <em>Analyze Match</em>.</li>
+                        <li>A loader will appear while the result is being generated.</li>
+                    </ol>
+                </div>
+
                 <form id="matchForm">
                     <!-- Resume Upload -->
                     <div class="form-group">
@@ -804,14 +816,17 @@
 
         // ── Action Buttons ────────────────────────────────────────────────────
         elements.tryAnotherBtn.addEventListener('click', () => {
-            elements.form.reset();
-            elements.fileName.textContent = '';
+            // Keep the uploaded resume cached in memory so the user doesn't need to re-upload.
+            // Only clear the job URL and return to the home page.
             elements.jobUrl.value = '';
-            state.resumeFile = null;
+            // Update visible file name to reflect cached file (if present)
+            elements.fileName.textContent = state.resumeFile ? `✓ ${state.resumeFile.name}` : '';
             state.showPage('home');
         });
 
         elements.retryBtn.addEventListener('click', () => {
+            // Retry should not clear the cached resume either — user likely wants to try again
+            elements.fileName.textContent = state.resumeFile ? `✓ ${state.resumeFile.name}` : '';
             state.showPage('home');
         });
 

@@ -1,4 +1,4 @@
-# Resume Matcher
+# Matcha
 
 A local Mac-based AI-powered résumé ↔ job description matcher built with
 **Spring Boot 3.4**, **Spring AI**, **Ollama (llama3.2)**, **Apache Tika**, and **Jsoup**.
@@ -59,7 +59,7 @@ Open your browser and navigate to:
 http://localhost:8080
 ```
 
-You'll see the Resume Matcher UI with:
+You'll see the Matcha UI with:
 - 📄 Resume upload (drag & drop or click)
 - 🔗 Job URL input
 - 🎯 Beautiful results page with color-coded scores
@@ -200,16 +200,16 @@ Response (when up):
 
 All settings in `src/main/resources/application.yml`:
 
-| Key                               | Default      | Description                          |
-|-----------------------------------|--------------|--------------------------------------|
-| `app.match.score-threshold`       | `75`         | Min score to send notification email |
-| `app.match.resume-char-limit`     | `4000`       | Max chars from résumé sent to LLM    |
-| `app.match.jd-char-limit`         | `4000`       | Max chars from JD sent to LLM        |
-| `spring.ai.ollama.base-url`       | `http://localhost:11434` | Ollama service URL |
-| `spring.ai.ollama.chat.model`     | `llama3.2`   | Model name to use                    |
-| `spring.ai.ollama.chat.options.temperature` | `0.2` | Deterministic output    |
-| `spring.mail.host`                | `smtp.gmail.com` | Email server                    |
-| `spring.mail.port`                | `587`        | SMTP port                            |
+| Key                                         | Default                  | Description                          |
+|---------------------------------------------|--------------------------|--------------------------------------|
+| `app.match.score-threshold`                 | `75`                     | Min score to send notification email |
+| `app.match.resume-char-limit`               | `4000`                   | Max chars from résumé sent to LLM    |
+| `app.match.jd-char-limit`                   | `4000`                   | Max chars from JD sent to LLM        |
+| `spring.ai.ollama.base-url`                 | `http://localhost:11434` | Ollama service URL                   |
+| `spring.ai.ollama.chat.model`               | `llama3.2`               | Model name to use                    |
+| `spring.ai.ollama.chat.options.temperature` | `0.2`                    | Deterministic output                 |
+| `spring.mail.host`                          | `smtp.gmail.com`         | Email server                         |
+| `spring.mail.port`                          | `587`                    | SMTP port                            |
 
 ---
 
@@ -336,5 +336,3 @@ MIT License - feel free to use for personal projects
 
 **Last Updated:** February 25, 2026  
 **Version:** 1.0.0
-
-

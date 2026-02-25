@@ -12,25 +12,27 @@ import org.springframework.stereotype.Component
  * via Spring Mail / Gmail SMTP.
  *
  * The threshold check is intentionally performed here rather than in the service
- * layer so that the orchestrator simply calls [sendIfEligible] and receives a
+ * layer so that the orchestrator simply calls sendIfEligible and receives a
  * boolean – the policy detail stays encapsulated in this adapter.
  */
 @Component
 class MailNotificationClient(
     private val mailSender: JavaMailSender,
-    private val props: AppProperties
+    private val props: AppProperties,
 ) {
-
     private val log = LoggerFactory.getLogger(javaClass)
 
     /**
-     * Send a notification email if [result.score] exceeds the configured threshold.
+     * Send a notification email if `result.score` exceeds the configured threshold.
      *
      * @param result  The AI-generated match assessment.
      * @param jobUrl  Original job posting URL (linked in the email body).
-     * @return        `true` if an email was dispatched, `false` otherwise.
+     * @return `true` if an email was dispatched, `false` otherwise.
      */
-    fun sendIfEligible(result: MatchResult, jobUrl: String): Boolean {
+    fun sendIfEligible(
+        result: MatchResult,
+        jobUrl: String,
+    ): Boolean {
         val threshold = props.match.scoreThreshold
 
         if (result.score <= threshold) {
@@ -44,8 +46,11 @@ class MailNotificationClient(
 
     // ── private ───────────────────────────────────────────────────────────────
 
-    private fun dispatch(result: MatchResult, jobUrl: String): Boolean {
-        val subject = "${props.email.subjectPrefix} Match Score ${result.score}/100 – Action Recommended"
+    private fun dispatch(
+        result: MatchResult,
+        jobUrl: String,
+    ): Boolean {
+        val subject = "${props.email.subjectPrefix} Match Score ${'$'}{result.score}/100 – Action Recommended"
 
         return runCatching {
             val message = mailSender.createMimeMessage()
@@ -53,37 +58,46 @@ class MailNotificationClient(
                 setFrom(props.email.from)
                 setTo(props.email.to)
                 setSubject(subject)
-                setText(buildHtml(result, jobUrl), /* html = */ true)
+                setText(buildHtml(result, jobUrl), true)
             }
             mailSender.send(message)
             log.info("Match email sent to '{}' with subject '{}'", props.email.to, subject)
-        }
-        .map { true }
-        .getOrElse { ex ->
-            // Email failure is non-fatal – log the error but don't blow up the response
-            log.error("Failed to send match email to '{}': {}", props.email.to, ex.message, ex)
-            false
-        }
+        }.map { true }
+            .getOrElse { ex ->
+                // Email failure is non-fatal – log the error but don't blow up the response
+                log.error("Failed to send match email to '{}': {}", props.email.to, ex.message, ex)
+                false
+            }
     }
 
     /**
      * Renders the match summary as an inline-CSS HTML email body.
      * Inline CSS is used for maximum Gmail / Outlook compatibility.
      */
-    private fun buildHtml(result: MatchResult, jobUrl: String): String {
-        val scoreColour = when {
-            result.score >= 85 -> "#27ae60"   // green
-            result.score >= 75 -> "#e67e22"   // orange
-            else               -> "#e74c3c"   // red
-        }
+    private fun buildHtml(
+        result: MatchResult,
+        jobUrl: String,
+    ): String {
+        val scoreColour =
+            when {
+                result.score >= 85 -> "#27ae60"
 
-        val matchedHtml = result.matchedSkills
-            .joinToString("") { "<li style='margin-bottom:4px;'>$it</li>" }
-            .ifBlank { "<li><em>None identified</em></li>" }
+                // green
+                result.score >= 75 -> "#e67e22"
 
-        val gapsHtml = result.gaps
-            .joinToString("") { "<li style='margin-bottom:4px;'>$it</li>" }
-            .ifBlank { "<li><em>No significant gaps found</em></li>" }
+                // orange
+                else -> "#e74c3c" // red
+            }
+
+        val matchedHtml =
+            result.matchedSkills
+                .joinToString("") { "<li style='margin-bottom:4px;'>$it</li>" }
+                .ifBlank { "<li><em>None identified</em></li>" }
+
+        val gapsHtml =
+            result.gaps
+                .joinToString("") { "<li style='margin-bottom:4px;'>$it</li>" }
+                .ifBlank { "<li><em>No significant gaps found</em></li>" }
 
         return """
             <!DOCTYPE html>
@@ -117,15 +131,15 @@ class MailNotificationClient(
                                         font-weight:bold;width:40%;">Match Score</td>
                             <td style="padding:14px 18px;font-size:32px;
                                         font-weight:bold;color:$scoreColour;">
-                              ${result.score} / 100
+                              ${'$'}{result.score} / 100
                             </td>
                           </tr>
                           <tr>
                             <td style="padding:14px 18px;background:#f9f9f9;
                                         font-weight:bold;vertical-align:top;">Job Posting</td>
                             <td style="padding:14px 18px;">
-                              <a href="$jobUrl" style="color:#2980b9;
-                                                       word-break:break-all;">$jobUrl</a>
+                              <a href="${'$'}jobUrl" style="color:#2980b9;
+                                                       word-break:break-all;">${'$'}jobUrl</a>
                             </td>
                           </tr>
                         </table>
@@ -139,7 +153,7 @@ class MailNotificationClient(
                           ✅ Matched Skills
                         </h2>
                         <ul style="margin:0;padding-left:20px;line-height:1.8;">
-                          $matchedHtml
+                          ${'$'}matchedHtml
                         </ul>
                       </td>
                     </tr>
@@ -151,7 +165,7 @@ class MailNotificationClient(
                           ⚠️ Skill Gaps
                         </h2>
                         <ul style="margin:0;padding-left:20px;line-height:1.8;">
-                          $gapsHtml
+                          ${'$'}gapsHtml
                         </ul>
                       </td>
                     </tr>
@@ -165,7 +179,7 @@ class MailNotificationClient(
                         <p style="margin:0;padding:14px 18px;background:#f0f7ff;
                                    border-left:4px solid #2980b9;
                                    border-radius:4px;line-height:1.7;">
-                          ${result.matchReason}
+                          ${'$'}{result.matchReason}
                         </p>
                       </td>
                     </tr>
@@ -174,7 +188,7 @@ class MailNotificationClient(
                     <tr>
                       <td style="padding:28px 32px;border-top:1px solid #eee;
                                   margin-top:28px;font-size:12px;color:#999;">
-                        Generated by Resume Matcher · Powered by llama3.2 via Ollama
+                        Generated by Matcha · Powered by llama3.2 via Ollama
                       </td>
                     </tr>
 
@@ -184,6 +198,6 @@ class MailNotificationClient(
 
             </body>
             </html>
-        """.trimIndent()
+            """.trimIndent()
     }
 }

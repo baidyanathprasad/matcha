@@ -41,7 +41,7 @@ app:
   email:
     from: ${GMAIL_USERNAME}
     to: ${NOTIFY_EMAIL:you@example.com}
-    subject-prefix: "[Resume Matcher]"
+    subject-prefix: "[Matcha]"
 
 # ── Server ────────────────────────────────────────────────────────────────────
 server:
@@ -70,4 +70,3 @@ logging:
     org.springframework.boot: INFO
   pattern:
     console: "%d{HH:mm:ss.SSS} [%-5level] [%-15thread] %-40logger{39} : %msg%n"
-
