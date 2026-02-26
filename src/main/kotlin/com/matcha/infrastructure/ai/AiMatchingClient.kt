@@ -39,13 +39,13 @@ class AiMatchingClient(
      * @param resumeText Plain text extracted from the PDF résumé.
      * @param jobText    Plain text scraped from the job posting.
      * @return [MatchResult] populated by the LLM.
-     * @throws AiParsingException if the model response cannot be deserialize.
+     * @throws AiParsingException if the model response cannot be deserialized.
      */
     fun compare(
         resumeText: String,
         jobText: String,
     ): MatchResult {
-        // Truncate inputs to stay within context window while preserving more context for better matching
+        // Truncate inputs to stay within a context window while preserving more context for better matching
         val resume = resumeText.take(props.match.resumeCharLimit)
         val jd = jobText.take(props.match.jdCharLimit)
 
@@ -196,7 +196,6 @@ class AiMatchingClient(
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
-
     private fun buildErrorMessage(ex: Throwable): String {
         val ollamaUrl = "http://localhost:11434"
         val rootCause = findRootCause(ex)
@@ -204,7 +203,7 @@ class AiMatchingClient(
         val lower = message.lowercase()
 
         return when {
-            // "model not found" (common when the configured model tag isn't pulled/available)
+            // "model isn't found" (common when the configured model tag isn't pulled/available)
             isModelNotFound(lower) -> {
                 "Ollama reports the requested model is not available.\n" +
                     "Details: $message\n" +
@@ -257,35 +256,35 @@ class AiMatchingClient(
         jd: String,
     ): String =
         """
-You are an expert technical recruiter with deep knowledge of software engineering roles.
-
-Your task: Analyze the RESUME against the JOB DESCRIPTION and produce a structured compatibility assessment.
-
-## RESUME
-$resume
-
-## JOB DESCRIPTION
-$jd
-
-## MATCHING METHODOLOGY
-Score the compatibility 0-100 using this approach:
-1. Identify ALL technical skills, technologies, and tools mentioned in BOTH documents
-2. Score based on:
-   - Skill overlap (how many required skills candidate has): 50 points
-   - Experience level match (seniority, scope): 25 points
-   - Domain expertise alignment: 15 points
-   - Soft skills / leadership if mentioned: 10 points
-3. For gaps: List ONLY explicitly stated requirements missing from the résumé
-4. Match reason: Explain in 2–3 sentences WHY you gave this score, referencing specific skills
-
-## OUTPUT FORMAT
-Respond with VALID JSON ONLY. No markdown, no explanations, no preamble.
-Include these exact fields:
-- score: integer 0-100
-- matchedSkills: array of exact skill names found in both documents
-- gaps: array of exact requirements from JD missing in résumé
-- matchReason: 2-3 sentence explanation
-
-${converter.format}
+        You are an expert technical recruiter with deep knowledge of software engineering roles.
+        
+        Your task: Analyze the RESUME against the JOB DESCRIPTION and produce a structured compatibility assessment.
+        
+        ## RESUME
+        $resume
+        
+        ## JOB DESCRIPTION
+        $jd
+        
+        ## MATCHING METHODOLOGY
+        Score the compatibility 0-100 using this approach:
+        1. Identify ALL technical skills, technologies, and tools mentioned in BOTH documents
+        2. Score based on:
+           - Skill overlap (how many required skills candidate has): 50 points
+           - Experience level match (seniority, scope): 25 points
+           - Domain expertise alignment: 15 points
+           - Soft skills / leadership if mentioned: 10 points
+        3. For gaps: List ONLY explicitly stated requirements missing from the résumé
+        4. Match reason: Explain in 2–3 sentences WHY you gave this score, referencing specific skills
+        
+        ## OUTPUT FORMAT
+        Respond with VALID JSON ONLY. No markdown, no explanations, no preamble.
+        Include these exact fields:
+        - score: integer 0-100
+        - matchedSkills: array of exact skill names found in both documents
+        - gaps: array of exact requirements from JD missing in résumé
+        - matchReason: 2-3 sentence explanation
+        
+        ${converter.format}
         """.trimIndent()
 }
