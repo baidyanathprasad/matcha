@@ -132,28 +132,52 @@ class AiMatchingClient(
 
         // Attempt to fix incomplete JSON if needed
         val fixedResponse = fixIncompleteJson(rawResponse)
+        log.debug("Fixed AI response:\n{}", fixedResponse)
         if (fixedResponse != rawResponse) {
             log.warn("Response was incomplete; attempted to fix JSON")
         }
 
+        // Try parsing, fallback to extracting JSON object if it fails
         return runCatching { converter.convert(fixedResponse) }
             .getOrElse { ex ->
-                throw AiParsingException(
-                    "Could not deserialize AI response into MatchResult. " +
-                        "Raw response was: ${fixedResponse?.take(300)}",
-                    ex,
-                )
+                // Fallback: try to extract JSON object from response and parse again
+                val fallbackJson = extractJsonObject(fixedResponse)
+                log.warn("Fallback: attempting to parse extracted JSON object")
+                runCatching { converter.convert(fallbackJson) }
+                    .getOrElse { ex2 ->
+                        log.error("AI response parsing failed. Raw: {}\nFixed: {}\nFallback: {}", rawResponse, fixedResponse, fallbackJson)
+                        throw AiParsingException(
+                            "Could not deserialize AI response into MatchResult. " +
+                                "Raw response was: ${fallbackJson.take(300)}",
+                            ex2,
+                        )
+                    }
             }!!
     }
 
     /**
      * Attempt to fix incomplete JSON responses from Ollama.
      * If the response is missing closing brackets/braces, add them.
+     * Also remove any text before first '{' and after last '}'.
      */
     private fun fixIncompleteJson(response: String?): String {
         if (response == null) return ""
+        var trimmed = response.trim()
 
-        val trimmed = response.trim()
+        // Remove markdown formatting if present
+        if (trimmed.startsWith("```")) {
+            trimmed = trimmed.removePrefix("```json").removePrefix("```").trim()
+        }
+
+        // Remove any text before first '{' and after last '}'
+        val firstBrace = trimmed.indexOf('{')
+        val lastBrace = trimmed.lastIndexOf('}')
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            trimmed = trimmed.substring(firstBrace, lastBrace + 1)
+        }
+
+        // Remove trailing commas in arrays/objects
+        trimmed = trimmed.replace(Regex(",\\s*([}\\]])"), "$1")
 
         // Check if JSON is incomplete (missing closing braces)
         var openBraces = 0
@@ -166,7 +190,6 @@ class AiMatchingClient(
                 escapeNext = false
                 continue
             }
-
             when (char) {
                 '\\' -> escapeNext = true
                 '"' -> inString = !inString
@@ -177,7 +200,7 @@ class AiMatchingClient(
             }
         }
 
-        // If JSON is incomplete, append missing closing brackets/braces
+        // Append missing closing brackets/braces
         var fixed = trimmed
         if (openBrackets > 0 || openBraces > 0) {
             log.warn(
@@ -185,11 +208,18 @@ class AiMatchingClient(
                 openBrackets,
                 openBraces,
             )
-
-            // Append missing closing brackets
             repeat(openBrackets) { fixed += "]" }
-            // Append missing closing braces
             repeat(openBraces) { fixed += "}" }
+        }
+
+        // Ensure JSON starts with '{' and ends with '}'
+        if (!fixed.startsWith("{")) {
+            val firstBrace2 = fixed.indexOf('{')
+            if (firstBrace2 >= 0) fixed = fixed.substring(firstBrace2)
+        }
+        if (!fixed.endsWith("}")) {
+            val lastBrace2 = fixed.lastIndexOf('}')
+            if (lastBrace2 >= 0) fixed = fixed.substring(0, lastBrace2 + 1)
         }
 
         return fixed
@@ -236,7 +266,7 @@ class AiMatchingClient(
     }
 
     private fun isModelNotFound(lowerMessage: String): Boolean {
-        // Typical Ollama error payload ends up in exception message like:
+        // Typical Ollama error payload ends up in an exception message like:
         // {"error":"model 'X' not found"}
         return lowerMessage.contains("model") &&
             lowerMessage.contains("not found") &&
@@ -278,7 +308,7 @@ class AiMatchingClient(
         4. Match reason: Explain in 2–3 sentences WHY you gave this score, referencing specific skills
         
         ## OUTPUT FORMAT
-        Respond with VALID JSON ONLY. No markdown, no explanations, no preamble.
+        Respond with VALID JSON ONLY. No markdown, no explanations, no preamble. Do not add any text before or after the JSON. The JSON must start with '{' and end with '}'.
         Include these exact fields:
         - score: integer 0-100
         - matchedSkills: array of exact skill names found in both documents
@@ -287,4 +317,16 @@ class AiMatchingClient(
         
         ${converter.format}
         """.trimIndent()
+
+    // Helper to extract a JSON object from a string
+    private fun extractJsonObject(response: String?): String {
+        if (response == null) return ""
+        val firstBrace = response.indexOf('{')
+        val lastBrace = response.lastIndexOf('}')
+        return if (firstBrace in 0..<lastBrace) {
+            response.substring(firstBrace, lastBrace + 1)
+        } else {
+            response
+        }
+    }
 }

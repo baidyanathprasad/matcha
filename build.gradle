@@ -55,6 +55,9 @@ dependencies {
     // ── Web Scraping – Jsoup ──────────────────────────────────────────────────
     implementation 'org.jsoup:jsoup:1.18.1'
 
+    // ── HTTP Client – OkHttp ───────────────────────────────────────────────────
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+
     // ── Utilities ────────────────────────────────────────────────────────────
     implementation 'commons-io:commons-io:2.16.1'
 
