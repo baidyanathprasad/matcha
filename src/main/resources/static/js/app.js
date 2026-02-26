@@ -164,6 +164,10 @@ elements.tryAnotherBtn.addEventListener('click', () => {
     elements.jobUrl.value = '';
     elements.fileName.textContent = state.resumeFile ? `✓ ${state.resumeFile.name}` : '';
     state.showPage('home');
+    // Ensure the loading page is hidden by resetting button state
+    elements.submitBtn.disabled = false;
+    elements.submitSpinner.style.display = 'none';
+    elements.submitText.textContent = 'Analyze Match';
 });
 
 elements.retryBtn.addEventListener('click', () => {
