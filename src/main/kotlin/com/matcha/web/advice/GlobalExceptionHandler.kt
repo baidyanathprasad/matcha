@@ -23,7 +23,6 @@ class GlobalExceptionHandler {
     private val log = LoggerFactory.getLogger(javaClass)
 
     // ── Domain / application exceptions ───────────────────────────────────────
-
     @ExceptionHandler(ResumeParsingException::class)
     fun handleResumeParsing(
         ex: ResumeParsingException,
@@ -52,7 +51,6 @@ class GlobalExceptionHandler {
     }
 
     // ── Spring / infrastructure exceptions ────────────────────────────────────
-
     @ExceptionHandler(MaxUploadSizeExceededException::class)
     fun handleFileTooLarge(
         ex: MaxUploadSizeExceededException,
@@ -91,7 +89,6 @@ class GlobalExceptionHandler {
     }
 
     // ── helper ────────────────────────────────────────────────────────────────
-
     private fun build(
         status: HttpStatus,
         error: String,
